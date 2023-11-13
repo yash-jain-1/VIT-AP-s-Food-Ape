@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:food_ape_3/cart.dart';
-import 'package:food_ape_3/info.dart';
-import 'package:food_ape_3/profile.dart';
+import 'package:food_ape_3/screens/cart.dart';
+import 'package:food_ape_3/screens/info.dart';
+import 'package:food_ape_3/screens/notification.dart';
+import 'package:food_ape_3/screens/profile.dart';
+import 'package:food_ape_3/utils/bottomNavBar.dart';
+import 'package:food_ape_3/utils/constants.dart';
+import 'package:food_ape_3/utils/foodCard.dart';
 import 'package:gsheets/gsheets.dart';
+import 'package:food_ape_3/screens/fs.dart';
+import 'package:food_ape_3/screens/mess.dart';
+
 
 // Your Google Sheets credentials
 const cred = r'''
@@ -29,31 +36,36 @@ void main() async {
   final gsheets = GSheets(cred);
   final ss = await gsheets.spreadsheet(spreadsheetID);
   var sheet = ss.worksheetByTitle('NovSpl');
+  var sheet2 = ss.worksheetByTitle('NovVeg_NonVeg');
   final data = await sheet?.values.map.allRows() ?? [];
+  final data2 = await sheet2?.values.map.allRows() ?? [];
 
-  runApp(FoodApp(data: data));
+  runApp(FoodApp(data: data, data2: data2));
 }
 
 class FoodApp extends StatelessWidget {
   final List<Map<String, String>> data;
+  final List<Map<String, String>> data2;
 
-  FoodApp({required this.data});
+  FoodApp({required this.data, required this.data2});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(data: data),
-      theme: ThemeData.dark(
-        
-      ),
+      home: HomePage(data: data, data2: data2),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+     
+
     );
   }
 }
 
 class HomePage extends StatefulWidget {
   final List<Map<String, String>> data;
+  final List<Map<String, String>> data2;
 
-  HomePage({required this.data});
+  HomePage({required this.data, required this.data2});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -62,50 +74,76 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   late List<Widget> _pages;
+  final Cart cart = Cart();
+  int currentIndex = 0;
+
+  setBottomBarIndex(index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
+
 
   @override
   void initState() {
     super.initState();
     _pages = [
-      MessPage(data: widget.data),
+      MessPage(data: widget.data, data2: widget.data2),
       FoodStreetPage(),
+      CartScreen(cart: cart),
+      ProfilePage(),
+      // DeveloperInfoPage(
+      //   developerName: 'Yash Jain',
+      //   developerBio:
+      //       'I am a computer science student at VIT-AP University. I love coding and learning new things. In my free time, I enjoy playing video games and watching movies.',
+      //   appDescription:
+      //       'This app was created as a project for Design Thinking.',
+      // ),
+      NotificationPage(),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
     return Scaffold(
-      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 182, 12, 0),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CartPage(
-                cart: Cart(),
-              ),
-            ),
-          );
-        },
-        child: Icon(Icons.shopping_cart),
-      ),
+
+      backgroundColor: Color.fromARGB(168, 50, 50, 50),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.orange,
+        shadowColor: Color.fromARGB(0, 172, 172, 172),
         titleTextStyle: TextStyle(
+          color: Colors.orange,
           fontSize: 24,
           fontWeight: FontWeight.bold,
           fontFamily: 'Roboto',
         ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(22),
+          ),
+        ),
         title: Text('Food Ape'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: IconButton(
+              style: ButtonStyle(
+                shadowColor: MaterialStateProperty.all<Color>(const Color.fromARGB(255, 142, 140, 140).withOpacity(0.1)),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),),
+              ),
+              icon: Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+              },
+            ),
           ),
           IconButton(
             icon: Icon(Icons.info),
@@ -117,7 +155,8 @@ class _HomePageState extends State<HomePage> {
                     developerName: 'Yash Jain',
                     developerBio:
                         'I am a computer science student at VIT-AP University. I love coding and learning new things. In my free time, I enjoy playing video games and watching movies.',
-                    appDescription: 'This app was created as a project for Design Thinking.',
+                    appDescription:
+                        'This app was created as a project for Design Thinking.',
                   ),
                 ),
               );
@@ -125,119 +164,211 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        fixedColor: const Color.fromARGB(255, 182, 12, 0),
-        unselectedLabelStyle: TextStyle(
-          color: const Color.fromARGB(255, 182, 12, 0),
-        ),
-        type: BottomNavigationBarType.shifting,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedIconTheme: IconThemeData(
-          color: const Color.fromARGB(255, 182, 12, 0),
-        ),
-        currentIndex: _currentIndex,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Mess',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fastfood),
-            label: 'Food Street',
-          ),
-        ],
-      ),
+      body: Stack(children: [_pages[_currentIndex],
+      Positioned(
+            bottom: 0,
+            left: 0,
+            child: Container(
+              width: size.width,
+              height: 80,
+              child: Stack(
+                clipBehavior: Clip.none, children: [
+                  CustomPaint(
+                    size: Size(size.width, 80),
+                    painter: BNBCustomPainter(),
+                  ),
+                  Center(
+                    heightFactor: 0.6,
+                    child: FloatingActionButton(backgroundColor: Colors.orange, child: Icon(Icons.shopping_basket_rounded), elevation: 0.1, onPressed: () {
+                      _currentIndex = 2;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CartScreen(cart: cart),
+                      ),
+                    );
+                    }),
+                  ),
+                  Container(
+                    width: size.width,
+                    height: 80,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.home,
+                            color: currentIndex == 0 ? Colors.orange : Colors.grey.shade400,
+                          ),
+                          onPressed: () {
+                            setBottomBarIndex(0);
+                            // display mess instead of food street
+                            _currentIndex = 0;
+                          },
+                          splashColor: Colors.white,
+                        ),
+                        IconButton(
+                            icon: Icon(
+                              Icons.restaurant_menu,
+                              color: currentIndex == 1 ? Colors.orange : Colors.grey.shade400,
+                            ),
+                            onPressed: () {
+                              setBottomBarIndex(1);
+                              // display food street instead of mess
+                              _currentIndex = 1;
+                            }),
+                        Container(
+                          width: size.width * 0.20,
+                        ),
+                        IconButton(
+                            icon: Icon(
+                              Icons.person_2_rounded,
+                              color: currentIndex == 2 ? Colors.orange : Colors.grey.shade400,
+                            ),
+                            onPressed: () {
+                              setBottomBarIndex(2);
+                              
+                              // go to profile page
+                              _currentIndex = 3;  
+                            }),
+                        IconButton(
+                            icon: Icon(
+                              Icons.notifications,
+                              color: currentIndex == 3 ? Colors.orange : Colors.grey.shade400,
+                            ),
+                            onPressed: () {
+                              setBottomBarIndex(3);
+                              // go to info page
+                              _currentIndex = 4;
+                            }),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          )]),
+      // bottomNavigationBar: BottomNavBarV2()
     );
   }
 }
 
-class MessPage extends StatelessWidget {
-  final List<Map<String, String>> data;
 
-  MessPage({required this.data});
+class Cart {
+  List<CartItem> items = [];
+
+  void addToCart(CartItem item) {
+    items.add(item);
+  }
+
+  void removeFromCart(CartItem item) {
+    items.remove(item);
+  }
+
+  double getTotalPrice() {
+    return items.fold(0.0, (sum, item) => sum + double.parse(item.price));
+  }
+}
+
+class CartScreen extends StatelessWidget {
+  final Cart cart;
+
+  CartScreen({required this.cart});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Food Cart'),
+      ),
+      body: ListView.builder(
+        itemCount: cart.items.length,
+        itemBuilder: (context, index) {
+          final item = cart.items[index];
+          return ListTile(
+            leading: Image.asset(item.image, width: 50, height: 50),
+            title: Text(item.name),
+            subtitle: Text('\$${item.price}'),
+            trailing: IconButton(
+              icon: Icon(Icons.remove_circle),
+              onPressed: () {
+                cart.removeFromCart(item);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Item removed from the cart'),
+                    action: SnackBarAction(
+                      label: 'UNDO',
+                      onPressed: () {
+                        cart.addToCart(item);
+                        //close the snackbar
 
-        SizedBox(height: 10,),
-        Expanded(
-          child: ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(
-                  title: Text(data[index]['DAYS'].toString()),
-                  subtitle: Column(
-                    children: [
-                      Text("BREAKFAST", style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data[index]['BREAK FAST'].toString()),
-                      SizedBox(height: 10,),
-                      Text("LUNCH", style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data[index]['LUNCH'].toString()),
-                      SizedBox(height: 10,),
-                      Text("SNACKS", style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data[index]['SNACKS'].toString()),
-                      SizedBox(height: 10,),
-                      Text("DINNER", style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text(data[index]['DINNER'].toString()),
-                    ],
+                      },
+                    ),
+                    animation: CurvedAnimation(
+                      parent: AlwaysStoppedAnimation(1),
+                      curve: Curves.easeInOut,
+                    )
                   ),
-              
-                ),
-              );
-            },
+                );
+              },
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Total:  ${cart.getTotalPrice()}',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
 class FoodStreetPage extends StatelessWidget {
+
+  final Cart cart = Cart();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Food Street', style: TextStyle(color: Colors.white, fontFamily: 'Roboto')),
-      ),
+      backgroundColor: kBackColor,
       body: ListView(
         children: [
           FoodCard(
-            name: 'Sushi Platter',
-            description: 'Fresh sushi selection with soy sauce.',
-            price: '\₨15.99',
-            image: 'assets/images/rice.jpg',
-            shop: 'Puri Vuri',
-          ),
+          name: 'Pizza',
+          description: 'Delicious pizza with toppings',
+          price: '10.99',
+          image: 'assets/images/pizza.jpg',
+          shop: 'Pizza Paradise',
+          cart: cart,
+        ),
           FoodCard(
             name: 'Taco Platter',
             description: 'Assorted tacos with salsa and guacamole.',
-            price: '\₨12.99',
+            price: '12.99',
             image: 'assets/images/apple_pie.jpg',
             shop: 'Taco Bell',
+            cart: cart  ,
           ),
           FoodCard(
             name: 'Burger and Fries',
             description: 'Delicious with sauce and Cola.',
-            price: '\₨9.99',
+            price: '9.99',
             image: 'assets/images/hamburger.jpg',
             shop: 'Burger King',
+            cart: cart,
           ),
           FoodCard(
             name: 'Margherita Pizza',
             description: 'Classic pizza with tomato and mozzarella.',
-            price: '\₨11.99',
+            price: '11.99',
             image: 'assets/images/pizza.jpg',
             shop: 'Pizza Hut',
+            cart: cart,
           ),
           // Add more FoodCard widgets for other items
         ],
@@ -246,50 +377,29 @@ class FoodStreetPage extends StatelessWidget {
   }
 }
 
-class FoodCard extends StatelessWidget {
-  final String name;
-  final String description;
-  final String price;
-  final String image;
-  final String shop;
+class BNBCustomPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = new Paint()
+      ..color = const Color.fromARGB(255, 24, 24, 24)
+      ..style = PaintingStyle.fill;
 
-  FoodCard({
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.image,
-    required this.shop,
-  });
+    Path path = Path();
+    path.moveTo(0, 20); // Start
+    path.quadraticBezierTo(size.width * 0.20, 0, size.width * 0.35, 0);
+    path.quadraticBezierTo(size.width * 0.40, 0, size.width * 0.40, 20);
+    path.arcToPoint(Offset(size.width * 0.60, 20), radius: Radius.circular(20.0), clockwise: false);
+    path.quadraticBezierTo(size.width * 0.60, 0, size.width * 0.65, 0);
+    path.quadraticBezierTo(size.width * 0.80, 0, size.width, 20);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.lineTo(0, 20);
+    canvas.drawShadow(path, Colors.black, 5, true);
+    canvas.drawPath(path, paint);
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Text(shop, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Image.asset(image, fit: BoxFit.cover),
-          ListTile(
-            title: Text(name),
-            subtitle: Text(description),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(price, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle button press to add item to cart
-                  },
-                  child: Text('Add to Cart'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return false;
   }
 }
