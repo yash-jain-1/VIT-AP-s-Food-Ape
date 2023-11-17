@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:food_ape_3/screens/cart.dart';
 import 'package:food_ape_3/screens/info.dart';
+import 'package:food_ape_3/screens/login.dart';
 import 'package:food_ape_3/screens/notification.dart';
+import 'package:food_ape_3/screens/payment.dart';
 import 'package:food_ape_3/screens/profile.dart';
-import 'package:food_ape_3/utils/bottomNavBar.dart';
 import 'package:food_ape_3/utils/constants.dart';
 import 'package:food_ape_3/utils/foodCard.dart';
+import 'package:food_ape_3/utils/foodShopCard.dart';
 import 'package:gsheets/gsheets.dart';
-import 'package:food_ape_3/screens/fs.dart';
+import 'dart:ui';
 import 'package:food_ape_3/screens/mess.dart';
-
+import 'package:rive/rive.dart';
 
 // Your Google Sheets credentials
 const cred = r'''
@@ -33,14 +34,19 @@ const spreadsheetID = '1ZBca-NZ5V_N0NwJ5t5Y5dpb5XFCZqRQYAXddU77M07U';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final gsheets = GSheets(cred);
-  final ss = await gsheets.spreadsheet(spreadsheetID);
-  var sheet = ss.worksheetByTitle('NovSpl');
-  var sheet2 = ss.worksheetByTitle('NovVeg_NonVeg');
-  final data = await sheet?.values.map.allRows() ?? [];
-  final data2 = await sheet2?.values.map.allRows() ?? [];
+  try {
+    final gsheets = GSheets(cred);
+    final ss = await gsheets.spreadsheet(spreadsheetID);
+    var sheet = ss.worksheetByTitle('NovSpl');
+    var sheet2 = ss.worksheetByTitle('NovVeg_NonVeg');
+    final data = await sheet?.values.map.allRows() ?? [];
+    final data2 = await sheet2?.values.map.allRows() ?? [];
 
-  runApp(FoodApp(data: data, data2: data2));
+    runApp(FoodApp(data: data, data2: data2));
+  } catch (e, stackTrace) {
+    print('Error initializing the app: $e\n$stackTrace');
+    // Handle the error appropriately, maybe show a friendly message to the user.
+  }
 }
 
 class FoodApp extends StatelessWidget {
@@ -52,11 +58,10 @@ class FoodApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(data: data, data2: data2),
+      // home: HomePage(data: data, data2: data2),
+      home: LoginScreen(data2: data2,data: data,),
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-     
-
     );
   }
 }
@@ -77,117 +82,135 @@ class _HomePageState extends State<HomePage> {
   final Cart cart = Cart();
   int currentIndex = 0;
 
+  @override
+  void initState() {
+    try {
+      super.initState();
+      _pages = [
+        MessPage(data: widget.data, data2: widget.data2),
+        FoodStreetPage(),
+        CartScreen(cart: cart),
+        ProfilePage(),
+        NotificationPage(),
+      ];
+    } catch (e, stackTrace) {
+      print('Error initializing the home page: $e\n$stackTrace');
+      // Handle the error appropriately, maybe show a friendly message to the user.
+    }
+  }
+
   setBottomBarIndex(index) {
     setState(() {
       currentIndex = index;
     });
   }
 
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      MessPage(data: widget.data, data2: widget.data2),
-      FoodStreetPage(),
-      CartScreen(cart: cart),
-      ProfilePage(),
-      // DeveloperInfoPage(
-      //   developerName: 'Yash Jain',
-      //   developerBio:
-      //       'I am a computer science student at VIT-AP University. I love coding and learning new things. In my free time, I enjoy playing video games and watching movies.',
-      //   appDescription:
-      //       'This app was created as a project for Design Thinking.',
-      // ),
-      NotificationPage(),
-    ];
-  }
+  
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    return Scaffold(
-
-      backgroundColor: Color.fromARGB(168, 50, 50, 50),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.orange,
-        shadowColor: Color.fromARGB(0, 172, 172, 172),
-        titleTextStyle: TextStyle(
-          color: Colors.orange,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Roboto',
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(22),
+    try {
+      final Size size = MediaQuery.of(context).size;
+      return Scaffold(
+        backgroundColor: Color.fromARGB(168, 50, 50, 50),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.orange,
+          shadowColor: Color.fromARGB(0, 172, 172, 172),
+          titleTextStyle: TextStyle(
+            color: Colors.orange,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Roboto',
           ),
-        ),
-        title: Text('Food Ape'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              style: ButtonStyle(
-                shadowColor: MaterialStateProperty.all<Color>(const Color.fromARGB(255, 142, 140, 140).withOpacity(0.1)),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(22),
+            ),
+          ),
+          title: Row(
+            children: [
+              Image.asset(
+                'assets/logo/logo.png',
+                width: 45,
+                height: 45,
+              ),
+              SizedBox(width: 30),
+              Text('Food Ape'),
+            ],
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: IconButton(
+                style: ButtonStyle(
+                  shadowColor: MaterialStateProperty.all<Color>(
+                      const Color.fromARGB(255, 142, 140, 140)
+                          .withOpacity(0.1)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
-                    ),),
+                    ),
+                  ),
+                ),
+                icon: Icon(Icons.person),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                  );
+                },
               ),
-              icon: Icon(Icons.person),
+            ),
+            IconButton(
+              icon: Icon(Icons.info),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                  MaterialPageRoute(
+                    builder: (context) => DeveloperInfoPage(
+                      developerName: 'Yash Jain',
+                      developerBio:
+                          'I am a computer science student at VIT-AP University. I love coding and learning new things. In my free time, I enjoy playing video games and watching movies.',
+                      appDescription:
+                          'This app was created as a project for Design Thinking.',
+                    ),
+                  ),
                 );
               },
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.info),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DeveloperInfoPage(
-                    developerName: 'Yash Jain',
-                    developerBio:
-                        'I am a computer science student at VIT-AP University. I love coding and learning new things. In my free time, I enjoy playing video games and watching movies.',
-                    appDescription:
-                        'This app was created as a project for Design Thinking.',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Stack(children: [_pages[_currentIndex],
-      Positioned(
+          ],
+        ),
+        body: Stack(children: [
+          _pages[_currentIndex],
+          Positioned(
             bottom: 0,
             left: 0,
             child: Container(
               width: size.width,
               height: 80,
               child: Stack(
-                clipBehavior: Clip.none, children: [
+                clipBehavior: Clip.none,
+                children: [
                   CustomPaint(
                     size: Size(size.width, 80),
                     painter: BNBCustomPainter(),
                   ),
                   Center(
                     heightFactor: 0.6,
-                    child: FloatingActionButton(backgroundColor: Colors.orange, child: Icon(Icons.shopping_basket_rounded), elevation: 0.1, onPressed: () {
-                      _currentIndex = 2;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CartScreen(cart: cart),
-                      ),
-                    );
-                    }),
+                    child: FloatingActionButton(
+                        backgroundColor: Colors.orange,
+                        child: Icon(Icons.shopping_basket_rounded),
+                        elevation: 0.1,
+                        onPressed: () {
+                          _currentIndex = 2;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CartScreen(cart: cart),
+                            ),
+                          );
+                        }),
                   ),
                   Container(
                     width: size.width,
@@ -198,7 +221,9 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                           icon: Icon(
                             Icons.home,
-                            color: currentIndex == 0 ? Colors.orange : Colors.grey.shade400,
+                            color: currentIndex == 0
+                                ? Colors.orange
+                                : Colors.grey.shade400,
                           ),
                           onPressed: () {
                             setBottomBarIndex(0);
@@ -210,7 +235,9 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                             icon: Icon(
                               Icons.restaurant_menu,
-                              color: currentIndex == 1 ? Colors.orange : Colors.grey.shade400,
+                              color: currentIndex == 1
+                                  ? Colors.orange
+                                  : Colors.grey.shade400,
                             ),
                             onPressed: () {
                               setBottomBarIndex(1);
@@ -223,18 +250,22 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                             icon: Icon(
                               Icons.person_2_rounded,
-                              color: currentIndex == 2 ? Colors.orange : Colors.grey.shade400,
+                              color: currentIndex == 2
+                                  ? Colors.orange
+                                  : Colors.grey.shade400,
                             ),
                             onPressed: () {
                               setBottomBarIndex(2);
-                              
+
                               // go to profile page
-                              _currentIndex = 3;  
+                              _currentIndex = 3;
                             }),
                         IconButton(
                             icon: Icon(
                               Icons.notifications,
-                              color: currentIndex == 3 ? Colors.orange : Colors.grey.shade400,
+                              color: currentIndex == 3
+                                  ? Colors.orange
+                                  : Colors.grey.shade400,
                             ),
                             onPressed: () {
                               setBottomBarIndex(3);
@@ -247,12 +278,21 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-          )]),
-      // bottomNavigationBar: BottomNavBarV2()
-    );
+          )
+        ]),
+        // bottomNavigationBar: BottomNavBarV2()
+      );
+    } catch (e, stackTrace) {
+      print('Error building the home page: $e\n$stackTrace');
+      // Handle the error appropriately, maybe show a friendly message to the user.
+      return Scaffold(
+        body: Center(
+          child: Text('Error initializing the app'),
+        ),
+      );
+    }
   }
 }
-
 
 class Cart {
   List<CartItem> items = [];
@@ -280,48 +320,71 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Food Cart'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.orange),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
-      body: ListView.builder(
-        itemCount: cart.items.length,
-        itemBuilder: (context, index) {
-          final item = cart.items[index];
-          return ListTile(
-            leading: Image.asset(item.image, width: 50, height: 50),
-            title: Text(item.name),
-            subtitle: Text('\$${item.price}'),
-            trailing: IconButton(
-              icon: Icon(Icons.remove_circle),
-              onPressed: () {
-                cart.removeFromCart(item);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Item removed from the cart'),
-                    action: SnackBarAction(
-                      label: 'UNDO',
-                      onPressed: () {
-                        cart.addToCart(item);
-                        //close the snackbar
-
-                      },
-                    ),
-                    animation: CurvedAnimation(
-                      parent: AlwaysStoppedAnimation(1),
-                      curve: Curves.easeInOut,
-                    )
-                  ),
-                );
-              },
-            ),
-          );
-        },
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ListView.builder(
+          itemCount: cart.items.length,
+          itemBuilder: (context, index) {
+            final item = cart.items[index];
+            return ListTile(
+              leading: Image.asset(item.image, width: 50, height: 50),
+              title: Text(item.name),
+              subtitle: Text('${item.price}'),
+              trailing: IconButton(
+                icon: Icon(Icons.remove_circle),
+                onPressed: () {
+                  cart.removeFromCart(item);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Item removed from the cart'),
+                        action: SnackBarAction(
+                          label: 'UNDO',
+                          onPressed: () {
+                            cart.addToCart(item);
+                            //close the snackbar
+                          },
+                        ),
+                        animation: CurvedAnimation(
+                          parent: AlwaysStoppedAnimation(1),
+                          curve: Curves.easeInOut,
+                        )),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Total:  ${cart.getTotalPrice()}',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Total:  ${cart.getTotalPrice()}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange),
+              ),
+            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PaymentScreen(totalPrice: cart.getTotalPrice()),
+                    ),
+                  );
+                },
+                child: Text('CHECKOUT',style: TextStyle(color: Colors.orange),),)
+          ],
         ),
       ),
     );
@@ -329,48 +392,106 @@ class CartScreen extends StatelessWidget {
 }
 
 class FoodStreetPage extends StatelessWidget {
-
   final Cart cart = Cart();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackColor,
-      body: ListView(
+      body: Column(
         children: [
-          FoodCard(
-          name: 'Pizza',
-          description: 'Delicious pizza with toppings',
-          price: '10.99',
-          image: 'assets/images/pizza.jpg',
-          shop: 'Pizza Paradise',
-          cart: cart,
-        ),
-          FoodCard(
-            name: 'Taco Platter',
-            description: 'Assorted tacos with salsa and guacamole.',
-            price: '12.99',
-            image: 'assets/images/apple_pie.jpg',
-            shop: 'Taco Bell',
-            cart: cart  ,
+          Padding(
+            padding: EdgeInsets.only(top: 20, left: 20, right: 20),
+            child: Text(
+              'Featured Food Shops',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ),
-          FoodCard(
-            name: 'Burger and Fries',
-            description: 'Delicious with sauce and Cola.',
-            price: '9.99',
-            image: 'assets/images/hamburger.jpg',
-            shop: 'Burger King',
-            cart: cart,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              height: 120, // Adjust the height as needed
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  FoodShopCard(
+                    shopName: 'Puri Vuri',
+                    image: 'assets/images/puriVuri.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+                  FoodShopCard(
+                    shopName: 'Bits and Bites',
+                    image: 'assets/images/pizza.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+                  FoodShopCard(
+                    shopName: 'Taco Bell',
+                    image: 'assets/images/apple_pie.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+                  FoodShopCard(
+                    shopName: 'Fruit King',
+                    image: 'assets/images/fruit.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+                  FoodShopCard(
+                    shopName: 'Burger King',
+                    image: 'assets/images/hamburger.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+                  FoodShopCard(
+                    shopName: 'Pizza Hut',
+                    image: 'assets/images/pizza.jpg',
+                    menu: 'assets/menus/menu1.webp',
+                  ),
+
+                  // Add more FoodShopCard widgets for other shops
+                ],
+              ),
+            ),
           ),
-          FoodCard(
-            name: 'Margherita Pizza',
-            description: 'Classic pizza with tomato and mozzarella.',
-            price: '11.99',
-            image: 'assets/images/pizza.jpg',
-            shop: 'Pizza Hut',
-            cart: cart,
+          Expanded(
+            child: ListView(
+              children: [
+                FoodCard(
+                  name: 'Pizza',
+                  description: 'Delicious pizza with toppings',
+                  price: '10.99',
+                  image: 'assets/images/pizza.jpg',
+                  shop: 'Pizza Paradise',
+                  cart: cart,
+                ),
+                FoodCard(
+                  name: 'Taco Platter',
+                  description: 'Assorted tacos with salsa and guacamole.',
+                  price: '12.99',
+                  image: 'assets/images/apple_pie.jpg',
+                  shop: 'Taco Bell',
+                  cart: cart,
+                ),
+                FoodCard(
+                  name: 'Burger and Fries',
+                  description: 'Delicious with sauce and Cola.',
+                  price: '9.99',
+                  image: 'assets/images/hamburger.jpg',
+                  shop: 'Burger King',
+                  cart: cart,
+                ),
+                FoodCard(
+                  name: 'Margherita Pizza',
+                  description: 'Classic pizza with tomato and mozzarella.',
+                  price: '11.99',
+                  image: 'assets/images/pizza.jpg',
+                  shop: 'Pizza Hut',
+                  cart: cart,
+                ),
+                // Add more FoodCard widgets for other items
+              ],
+            ),
           ),
-          // Add more FoodCard widgets for other items
+          SizedBox(
+            height: 100,
+          ),
         ],
       ),
     );
@@ -388,7 +509,8 @@ class BNBCustomPainter extends CustomPainter {
     path.moveTo(0, 20); // Start
     path.quadraticBezierTo(size.width * 0.20, 0, size.width * 0.35, 0);
     path.quadraticBezierTo(size.width * 0.40, 0, size.width * 0.40, 20);
-    path.arcToPoint(Offset(size.width * 0.60, 20), radius: Radius.circular(20.0), clockwise: false);
+    path.arcToPoint(Offset(size.width * 0.60, 20),
+        radius: Radius.circular(20.0), clockwise: false);
     path.quadraticBezierTo(size.width * 0.60, 0, size.width * 0.65, 0);
     path.quadraticBezierTo(size.width * 0.80, 0, size.width, 20);
     path.lineTo(size.width, size.height);

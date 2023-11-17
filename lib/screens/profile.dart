@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:food_ape_3/screens/login.dart';
 import 'package:food_ape_3/utils/appBar.dart';
 import 'package:food_ape_3/utils/constants.dart';
 
@@ -98,7 +98,56 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20),
-                
+                Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'HOSTEL:',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'MH-3',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+                ),
+
+                //add a log out button and push login screen
+                Container(
+                  decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [Colors.orange, Colors.deepOrange],
+                          ),
+                        ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen(data2: [],data: [],)),
+                      );
+                    },
+                    child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [Colors.orange, Colors.deepOrange],
+                          ),
+                        ),
+                        child: Text('Log Out')),
+                  ),
+                ),
               ],
             ),
           ],

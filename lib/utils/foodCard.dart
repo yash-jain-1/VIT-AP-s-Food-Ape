@@ -43,7 +43,7 @@ class FoodCard extends StatelessWidget {
             title: Text(name),
             subtitle: Text(description),
           ),
-
+    
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(

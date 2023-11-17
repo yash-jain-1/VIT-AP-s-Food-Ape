@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:rive/rive.dart';
 
 class DeveloperInfoPage extends StatelessWidget {
   final String developerName;
@@ -78,6 +79,26 @@ class DeveloperInfoPage extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
+            SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: Offset(0, 5)),
+                ],
+              ),
+              alignment: Alignment.center,
+              height: 500,
+              width: 500,
+              child: RiveAnimation.asset(
+                'assets/rive/5051-10195-im-scared-of-mouse-hovers.riv',
+                fit: BoxFit.cover,
+              )),
+
           ],
         ),
       ),

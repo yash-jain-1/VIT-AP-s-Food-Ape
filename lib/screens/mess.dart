@@ -30,7 +30,7 @@ class _MessPageState extends State<MessPage> {
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
             ),
             FilterChip(
-              label: Text("Veg / Non-Veg"),
+              label: Text("Special"),
               backgroundColor: Color.fromARGB(255, 64, 64, 64),
               showCheckmark: false,
               selectedColor: const Color.fromARGB(255, 255, 154, 23),
@@ -44,7 +44,7 @@ class _MessPageState extends State<MessPage> {
               selected: veg,
             ),
             FilterChip(
-              label: Text("Special"),
+              label: Text("Veg / Non-Veg"),
               showCheckmark: false,
               backgroundColor: Color.fromARGB(255, 64, 64, 64),
               selectedColor: const Color.fromARGB(255, 255, 154, 23),
